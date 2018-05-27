@@ -1,0 +1,7 @@
+{
+	"name": "shuttle_api",
+	"description": "An api for shuttle tracking system",
+	"repository":"https://github.com/enochMarley/shuttle_tracker_api.github.io.git",
+	"keywords":["shuttle","tracker", "track", "UCC shuttle"],
+	"image":"heroku/nodejs"
+}

@@ -18,8 +18,14 @@ var server =  require('http').createServer(app);
 var io = require('socket.io')(server);
 var path = require('path');
 var mongoose = require('mongoose');
-var port = process.env.PORT || 3000;
+var port = process.env.PORT || 4000;
 var mongoDbUrl = 'mongodb://busapi:busapi@ds231090.mlab.com:31090/busapi';
+
+//listen on port number provided
+server.listen(port, (req, res) => {
+    console.log(`Server connected on port ${port}`);
+});
+
 //var mongoDbUrl = 'mongodb://127.0.0.1/busApi';
 mongoose.connect(mongoDbUrl, function(error){
 	if (error) {
@@ -44,11 +50,6 @@ var busDetails = mongoose.model("coordinates", busCoordsSchema);
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
-
-//listen on port number provided
-server.listen(port, (req, res) => {
-    console.log(`Server connected on port ${port}`);
-});
 
 app.get('/', (req,res) => {
 	res.send('Hello world')
