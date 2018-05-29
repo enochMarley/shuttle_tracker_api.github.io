@@ -65,15 +65,16 @@ app.get('/', (req,res) => {
 
 //when a post request is made to insert coordinates into the database
 app.get('/insertCoordinates', (req,res) => {
+	res.setHeader('Access-Control-Allow-Origin', '*');
 	//update the database details where the bus name is the provided bus name
 	busDetails.update({busName: req.query.busName}, {$set: {'lon': req.query.lon, 'lat': req.query.lat, time_stamp: Date.now()}} , (error,res) => {
 		if(error) {
 			console.log(error)
 		} else {
 			console.log('data updated')
-			res.send({'success': 'true'})
 		}
 	});
+	res.send({'success':'success from sending coords...'})
 });
 
 
