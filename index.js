@@ -52,7 +52,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 
 
 app.get('/', (req,res) => {
-	res.send('Hello world')
+	res.send({'success': 'true'})
 })
 
 //when a post request is made to insert coordinates into the database
@@ -63,6 +63,7 @@ app.get('/insertCoordinates', (req,res) => {
 			console.log(error)
 		} else {
 			console.log('data updated')
+			res.send({'success': 'true'})
 		}
 	});
 });
