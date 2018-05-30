@@ -20,13 +20,13 @@ var path = require('path');
 var mongoose = require('mongoose');
 var port = process.env.PORT || 4000;
 var mongoDbUrl = 'mongodb://busapi:busapi@ds231090.mlab.com:31090/busapi';
+//var mongoDbUrl = 'mongodb://127.0.0.1/busApi';
 
 //listen on port number provided
 server.listen(port, (req, res) => {
     console.log(`Server connected on port ${port}`);
 });
 
-//var mongoDbUrl = 'mongodb://127.0.0.1/busApi';
 mongoose.connect(mongoDbUrl, function(error){
 	if (error) {
 		console.log(error)
@@ -43,8 +43,22 @@ var busCoordsSchema = mongoose.Schema({
 	time_stamp: {type: Date,default: Date.now}
 });
 
-//creating a model for the bus schema
-var busDetails = mongoose.model("coordinates", busCoordsSchema);
+//creating schema for the bus users
+var usersSchema = mongoose.Schema({
+	username: String,
+	userPassword: String
+})
+
+//creating schema for admin
+var adminSchema = mongoose.Schema({
+	adminName: String,
+	authCode: String
+})
+
+//creating a model for the admin, bus and users schema
+var busDetails = mongoose.model("coordinate", busCoordsSchema);
+var userDetails = mongoose.model("user", usersSchema);
+var adminDetails = mongoose.model("admin", adminSchema);
 
 //use body-parser to serialize and encode the incoming data.
 app.use(bodyParser.json());
@@ -60,7 +74,133 @@ app.use(function (req, res, next) {
 
 
 app.get('/', (req,res) => {
-	res.send({'success': 'true'})
+	res.send({'success': 'true. this is the index '})
+});
+
+//request to log in a user
+app.post('/login', (req, res) => {
+	res.setHeader('Access-Control-Allow-Origin', '*');
+	var username = req.body.username;
+	var password = req.body.password;
+
+	userDetails.find({username: username, userPassword: password}, (error, user) => {
+		if (error) {
+			var response = {
+				'success': false,
+				'message': 'Login failed. Check your internet connection'
+			} 
+			res.send(response);
+		} else {
+			if (user.length > 0) {
+				var response = {
+					'success': true,
+					'message': 'Login successful'
+				} 
+				res.send(response);
+			} else {
+				var response = {
+					'success': false,
+					'message': 'Wrong username or password. Please try again'
+				} 
+				res.send(response);
+			}
+		}
+	})
+});
+
+//request to sign up a use
+app.post('/signup', (req, res) => {
+	res.setHeader('Access-Control-Allow-Origin', '*');
+
+	//check if the user already exists
+	userDetails.find({username: req.body.username}, (error, user) => {
+		//if there is an error, return an error response
+		if (error) {
+			var response = {
+				'success': false,
+				'message': 'Could not sign up. Check your internet connection'
+			} 
+			res.send(response)
+		} else {
+			//if there is no error, check if the user exists
+			//if the user exists, return an error response
+			if (user.length > 0) {
+				var response = {
+					'success': false,
+					'message': 'User already exists'
+				} 
+				res.send(response)
+			} else { //else if the user does not exist
+				//check if the authcode is correct
+				console.log(req.body.authCode)
+				adminDetails.find({authCode: req.body.authCode}, (error, admin) => {
+					if(error) {
+						var response = {
+							'success': false,
+							'message': 'Could not verify admin. Check your internet connection'
+						} 
+						res.send(response);
+					} else {
+						if (admin.length > 0) {
+							var user = new userDetails({username: req.body.username, userPassword: req.body.password});
+							user.save(error => {
+								if (error) {
+									var response = {
+										'success': false,
+										'message': 'Could not sign up. Check your internet connection'
+									} 
+									res.send(response);
+								} else {
+									var response = {
+										'success': true,
+										'message': 'Signup successful'
+									} 
+									res.send(response);
+								}
+							})
+						} else {
+							var response = {
+								'success': false,
+								'message': 'Authentication failed. Wrong admin auth code.'
+							} 
+							res.send(response);
+						}
+					}
+				})
+			}
+			
+		}
+	})
+});
+
+//request to check admin authentication
+app.post('/authAdmin', (req, res) => {
+	res.setHeader('Access-Control-Allow-Origin', '*');
+	var authCode = req.body.authCode;
+
+	adminDetails.find({authCode: authCode}, (error, admin) => {
+		if (error) {
+			var response = {
+				'success': false,
+				'message': 'Could not authenticate admin. Check your internet connection'
+			}
+			res.send(response);
+		} else {
+			if (admin.length > 0) {
+				var response = {
+					'success': true,
+					'message': 'Admin authentication successful'
+				}
+				res.send(response);
+			} else {
+				var response = {
+					'success': false,
+					'message': 'Wrong admin auth code'
+				}
+				res.send(response);
+			}
+		}
+	})
 })
 
 //when a post request is made to insert coordinates into the database
